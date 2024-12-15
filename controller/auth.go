@@ -10,7 +10,7 @@ import (
 )
 
 func RegisterAkun(c *fiber.Ctx) error {
-	var user model.User
+	var user model.Users
 
 	// Koneksi ke database
 	db := c.Locals("db").(*gorm.DB)
@@ -40,14 +40,14 @@ func RegisterAkun(c *fiber.Ctx) error {
 	}
 
 	// Cek apakah email sudah terdaftar
-	if err := db.Where("email = ?", user.Email).First(&model.User{}).Error; err == nil {
+	if err := db.Where("email = ?", user.Email).First(&model.Users{}).Error; err == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Email sudah terdaftar",
 		})
 	}
 
 	// Cek apakah nomor telepon sudah terdaftar
-	if err := db.Where("phone_number = ?", user.PhoneNumber).First(&model.User{}).Error; err == nil {
+	if err := db.Where("phone_number = ?", user.PhoneNumber).First(&model.Users{}).Error; err == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Nomor telepon sudah terdaftar",
 		})

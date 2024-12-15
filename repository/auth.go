@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateRole(db *gorm.DB, role *model.Role) error {
+func CreateRole(db *gorm.DB, role *model.Roles) error {
 	// Buat jika RoleID 1 (admin) jika RoleID 2 (user)
 	if role.RoleID == 1 {
 		// Buat user admin
@@ -31,7 +31,7 @@ func CreateRole(db *gorm.DB, role *model.Role) error {
 	return nil
 }
 
-func CreateUser(db *gorm.DB, user *model.User) error {
+func CreateUser(db *gorm.DB, user *model.Users) error {
 	// Generate UserID secara random
 	user.UserID = utils.GenerateRandomID(1, 10000)
 

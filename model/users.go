@@ -1,7 +1,7 @@
 package model
 
 // Struktur untuk pengguna (Users)
-type User struct {
+type Users struct {
 	UserID      uint   `gorm:"primaryKey;autoIncrement" json:"user_id"`
 	FullName    string `gorm:"not null" json:"full_name"`
 	Email       string `gorm:"unique;not null" json:"email"`
@@ -9,11 +9,11 @@ type User struct {
 	Password    string `gorm:"not null" json:"password"`
 	RoleID      uint   `gorm:"not null" json:"role_id"`
 	Status      string `gorm:"default:'biasa'" json:"status"`
-	Role        Role   `gorm:"foreignKey:RoleID" json:"role"`
+	Roles       Roles  `gorm:"foreignKey:RoleID" json:"role"`
 }
 
 // Struct untuk Role
-type Role struct {
+type Roles struct {
 	RoleID   uint   `gorm:"primaryKey" json:"role_id"`
 	RoleName string `gorm:"not null" json:"role_name"`
 }
