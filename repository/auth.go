@@ -25,7 +25,7 @@ func CreateRole(db *gorm.DB, role *model.Roles) error {
 	// Buat Role
 	err := db.Create(&role).Error
 	if err != nil {
-		return fmt.Errorf("Gagal membuat role: %v", err)
+		return fmt.Errorf("gagal membuat role: %v", err)
 	}
 	
 	return nil
