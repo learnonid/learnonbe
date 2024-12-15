@@ -7,23 +7,25 @@ import (
 
 // Validasi nomor telepon
 func ValidatePhoneNumber(phoneNumber string) error {
-	regex := `^(62|0)8[1-9][0-9]{6,9}$`
-	match, _ := regexp.MatchString(regex, phoneNumber)
-	if !match {
-		return errors.New("nomor telepon tidak valid")
-	}
-	return nil
+    regex := `^(62|0)8[1-9][0-9]{7,13}$`
+    match, _ := regexp.MatchString(regex, phoneNumber)
+    if !match {
+        return errors.New("nomor telepon tidak valid")
+    }
+    return nil
 }
 
-// Ubah jika user menginput nomor telepon dengan 08 menjadi +628
+
+// Ubah jika user menginput nomor telepon dengan 08 menjadi 628
 func ChangePhoneNumber(phoneNumber string) string {
-	regex := `^08[1-9][0-9]{6,9}$`
-	match, _ := regexp.MatchString(regex, phoneNumber)
-	if match {
-		phoneNumber = "62" + phoneNumber[1:]
-	}
-	return phoneNumber
+    regex := `^08[1-9][0-9]{7,13}$`
+    match, _ := regexp.MatchString(regex, phoneNumber)
+    if match {
+        phoneNumber = "62" + phoneNumber[1:] // Ganti '0' di awal dengan '62'
+    }
+    return phoneNumber
 }
+
 
 // Validasi email
 func ValidateEmail(email string) error {
