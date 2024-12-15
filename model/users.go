@@ -6,7 +6,7 @@ type User struct {
 	FullName    string `gorm:"not null" json:"full_name"`
 	Email       string `gorm:"unique;not null" json:"email"`
 	PhoneNumber string `gorm:"size:15" json:"phone_number"`
-	Password    string `gorm:"not null" json:"-"`
+	Password    string `gorm:"not null" json:"password"`
 	RoleID      uint   `gorm:"not null" json:"role_id"`
 	Status      string `gorm:"default:'biasa'" json:"status"`
 	Role        Role   `gorm:"foreignKey:RoleID" json:"role"`
