@@ -7,7 +7,7 @@ import (
 
 // Validasi nomor telepon
 func ValidatePhoneNumber(phoneNumber string) error {
-	regex := `^(\+62|62|0)8[1-9][0-9]{6,9}$`
+	regex := `^(62|0)8[1-9][0-9]{6,9}$`
 	match, _ := regexp.MatchString(regex, phoneNumber)
 	if !match {
 		return errors.New("Nomor telepon tidak valid")
@@ -20,7 +20,7 @@ func ChangePhoneNumber(phoneNumber string) string {
 	regex := `^08[1-9][0-9]{6,9}$`
 	match, _ := regexp.MatchString(regex, phoneNumber)
 	if match {
-		phoneNumber = "+62" + phoneNumber[1:]
+		phoneNumber = "62" + phoneNumber[1:]
 	}
 	return phoneNumber
 }
