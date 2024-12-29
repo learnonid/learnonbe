@@ -5,7 +5,7 @@ import (
 	repo "learnonbe/repository"
 	
 	// "strings"
-	// "fmt"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -96,16 +96,61 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	// Generate JWT token
-	token, err := repo.GenerateToken(user.UserID)
+	token, err := repo.GenerateToken(user.UserID, user.RoleID)
 	if err != nil {
+		fmt.Println("Error generating token:", err) // Log error
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to generate token",
 			"error":   err.Error(),
 		})
-	}
+	}	
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Login successful",
 		"token":   token,
 	})
+}
+
+func GetProfile(c *fiber.Ctx) error {
+    // Ambil klaim dari context
+    claims, ok := c.Locals("claims").(*model.JWTClaims)
+    if !ok {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+            "message": "Unauthorized access",
+        })
+    }
+
+    // Debug klaim
+    fmt.Printf("Claims in GetProfile: UserID=%d, RoleID=%d\n", claims.UserID, claims.RoleID)
+
+    // Ambil UserID dari klaim
+    userID := claims.UserID
+
+    // Koneksi ke database
+    db := c.Locals("db").(*gorm.DB)
+
+    // Cari user berdasarkan UserID
+    user, err := repo.GetUserByID(db, userID)
+    if err != nil {
+        if err == gorm.ErrRecordNotFound {
+            return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+                "message": "User not found",
+            })
+        }
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to retrieve user profile",
+            "error":   err.Error(),
+        })
+    }
+
+    // Hapus informasi sensitif seperti password sebelum mengirim respons
+    user.Password = ""
+
+	fmt.Printf("Claims in GetProfile: UserID=%d, RoleID=%d\n", claims.UserID, claims.RoleID)
+
+    // Kembalikan profil pengguna
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "User profile retrieved successfully",
+        "user":    user,
+    })
 }

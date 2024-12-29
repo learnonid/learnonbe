@@ -65,11 +65,14 @@ func CreateUser(db *gorm.DB, user *model.Users) error {
     return nil
 }
 
-func GenerateToken(UserID uint) (string, error) {
-	// Claim
-	claims := jwt.MapClaims{
-		"UserID": UserID,
-		"exp": time.Now().Add(time.Hour * 12).Unix(), // Token berlaku selama 12 jam
+func GenerateToken(userID, roleID uint) (string, error) {
+	// Buat klaim menggunakan JWTClaims
+	claims := model.JWTClaims{
+		UserID: userID,
+		RoleID: roleID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(12 * time.Hour).Unix(), // Token berlaku selama 12 jam
+		},
 	}
 
 	// Generate token

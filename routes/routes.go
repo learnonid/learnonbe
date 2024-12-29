@@ -19,7 +19,8 @@ func SetupRoutes(app *fiber.App) {
 	AuthRoutes.Post("/login", controller.Login)
 
 	// Middleware
-	ProtectedRoutes := app.Group("/api")
+	ProtectedRoutes := app.Group("/u")
 	ProtectedRoutes.Use(middleware.JWTMiddleware("secret"))
+	ProtectedRoutes.Get("/profile", controller.GetProfile)
 	// ProtectedRoutes.Get("/user", controller.GetUser)
 }
