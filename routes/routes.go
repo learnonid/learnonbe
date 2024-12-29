@@ -17,6 +17,7 @@ func SetupRoutes(app *fiber.App) {
 	AuthRoutes := app.Group("/auth")
 	AuthRoutes.Post("/register", controller.RegisterAkun)
 	AuthRoutes.Post("/login", controller.Login)
+	AuthRoutes.Post("/login/admin", controller.LoginAdmin)
 
 	// Middleware
 	ProtectedRoutes := app.Group("/u")

@@ -111,6 +111,62 @@ func Login(c *fiber.Ctx) error {
 	})
 }
 
+func LoginAdmin(c *fiber.Ctx) error {
+	var loginRequest struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	// Dapatkan koneksi database dari context
+	db := c.Locals("db").(*gorm.DB)
+
+	// Parse body request ke struct
+	if err := c.BodyParser(&loginRequest); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+			"error":   err.Error(),
+		})
+	}
+
+	// Cari user berdasarkan email
+	var user model.Users
+	if err := db.Where("email = ?", loginRequest.Email).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Invalid email or password",
+		})
+	}
+
+	// Periksa apakah user memiliki RoleID untuk admin
+	if user.RoleID != 1 { // Misalnya RoleID=1 adalah admin
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"message": "Access denied. Admin privileges required.",
+		})
+	}
+
+	// Bandingkan password yang diinput dengan yang tersimpan
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password)); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Invalid email or password",
+		})
+	}
+
+	// Generate JWT token
+	token, err := repo.GenerateToken(user.UserID, user.RoleID)
+	if err != nil {
+		fmt.Println("Error generating token:", err) // Log error
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to generate token",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Admin login successful",
+		"token":   token,
+	})
+}
+
+
 func GetProfile(c *fiber.Ctx) error {
     // Ambil klaim dari context
     claims, ok := c.Locals("claims").(*model.JWTClaims)
