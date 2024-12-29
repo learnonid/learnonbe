@@ -11,5 +11,5 @@ type UserEventRegistration struct {
 	SertifikatFile   string `gorm:"size:255" json:"sertifikat_file,omitempty"`          // Lokasi file sertifikat untuk user VIP
 	RegistrationDate string `gorm:"default:CURRENT_TIMESTAMP" json:"registration_date"` // Tanggal registrasi
 	Users            Users  `gorm:"foreignKey:UserID" json:"user"`
-	Event            Event  `gorm:"foreignKey:EventID" json:"event"`
+	Event            Events  `gorm:"foreignKey:EventID" json:"event"`
 }

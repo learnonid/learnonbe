@@ -23,4 +23,12 @@ func SetupRoutes(app *fiber.App) {
 	ProtectedRoutes.Use(middleware.JWTMiddleware("secret"))
 	ProtectedRoutes.Get("/profile", controller.GetProfile)
 	// ProtectedRoutes.Get("/user", controller.GetUser)
+
+	// Event routes
+	EventRoutes := app.Group("/event")
+	EventRoutes.Post("/create", controller.CreateEvent)
+	EventRoutes.Post("/upload-image", controller.UploadEventImageHandler)
+
+	// Static file
+	app.Static("/uploads", "./uploads")
 }
