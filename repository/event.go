@@ -7,7 +7,7 @@ import (
 	"os"
 	"fmt"
 	"io"
-	
+
 	"gorm.io/gorm"
 	"path/filepath"
 	"mime/multipart"
@@ -67,4 +67,72 @@ func saveMultipartFile(file *multipart.FileHeader, dst string) error {
         fmt.Printf("Error copying file: %v\n", err)
     }
     return err
+}
+
+func GetEventByID(db *gorm.DB, eventID int) (*model.Events, error) {
+	event := new(model.Events)
+	err := db.Where("event_id = ?", eventID).First(&event).Error
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil event: %v", err)
+	}
+
+	return event, nil
+}
+
+func GetAllEvents(db *gorm.DB) ([]model.Events, error) {
+	var events []model.Events
+	err := db.Find(&events).Error
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil semua event: %v", err)
+	}
+
+	return events, nil
+}
+
+func UpdateEvent(db *gorm.DB, event *model.Events) error {
+	err := db.Save(&event).Error
+	if err != nil {
+		return fmt.Errorf("gagal mengupdate event: %v", err)
+	}
+
+	return nil
+}
+
+func DeleteEvent(db *gorm.DB, eventID int) error {
+	err := db.Delete(&model.Events{}, eventID).Error
+	if err != nil {
+		return fmt.Errorf("gagal menghapus event: %v", err)
+	}
+
+	return nil
+}
+
+func GetEventByDate(db *gorm.DB, date string) ([]model.Events, error) {
+	var events []model.Events
+	err := db.Where("event_date = ?", date).Find(&events).Error
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil event berdasarkan tanggal: %v", err)
+	}
+
+	return events, nil
+}
+
+func GetEventByType(db *gorm.DB, eventType string) ([]model.Events, error) {
+	var events []model.Events
+	err := db.Where("event_type = ?", eventType).Find(&events).Error
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil event berdasarkan tipe: %v", err)
+	}
+
+	return events, nil
+}
+
+func GetEventByPrice(db *gorm.DB, price float64) ([]model.Events, error) {
+	var events []model.Events
+	err := db.Where("price = ?", price).Find(&events).Error
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil event berdasarkan harga: %v", err)
+	}
+
+	return events, nil
 }

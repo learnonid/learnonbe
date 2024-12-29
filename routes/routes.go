@@ -28,6 +28,7 @@ func SetupRoutes(app *fiber.App) {
 	EventRoutes := app.Group("/event")
 	EventRoutes.Post("/create", controller.CreateEvent)
 	EventRoutes.Post("/upload-image", controller.UploadEventImageHandler)
+	EventRoutes.Get("/all", controller.GetEvents)
 
 	// Static file
 	app.Static("/uploads", "./uploads")

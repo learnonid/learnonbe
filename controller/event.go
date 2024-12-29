@@ -78,3 +78,19 @@ func UploadEventImageHandler(c *fiber.Ctx) error {
         "file_url": fileURL,
     })
 }
+
+// Get all events from the database using repository function
+func GetEvents(c *fiber.Ctx) error {
+	db := c.Locals("db").(*gorm.DB)
+	events, err := repository.GetAllEvents(db)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to fetch events",
+			"error":   err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Events retrieved successfully",
+		"events":  events,
+	})
+}
