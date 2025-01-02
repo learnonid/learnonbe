@@ -35,6 +35,12 @@ func SetupRoutes(app *fiber.App) {
 	EventRoutes.Post("/upload-image", controller.UploadEventImageHandler)
 	EventRoutes.Get("/all", controller.GetEvents)
 
+	// Admin routes
+	AdminRoutes := app.Group("/admin")
+	AdminRoutes.Use(middleware.JWTMiddleware("secret"))
+	AdminRoutes.Put("/update-user/:id", controller.UpdateUser)
+	AdminRoutes.Delete("/delete-user/:id", controller.DeleteUser)
+
 	// Static file
 	app.Static("/uploads", "./uploads")
 }

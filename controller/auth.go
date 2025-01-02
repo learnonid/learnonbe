@@ -10,6 +10,8 @@ import (
 	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+
 	// "go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -75,6 +77,76 @@ func RegisterAkun(c *fiber.Ctx) error {
     })
 }
 
+func UpdateUser(c *fiber.Ctx) error {
+    // Parse the user ID from the URL parameter
+    userID, err := primitive.ObjectIDFromHex(c.Params("id"))
+    if err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "message": "Invalid user ID",
+            "error":   err.Error(),
+        })
+    }
+
+    // Parse the request body to get the update data
+    var updateData model.Users
+    if err := c.BodyParser(&updateData); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "message": "Invalid request body",
+            "error":   err.Error(),
+        })
+    }
+
+    // Convert updateData to bson.M
+    update := bson.M{
+        "name":  updateData.FullName,
+        "email": updateData.Email,
+		"phone": updateData.PhoneNumber,
+		"password": updateData.Password,
+		"status": updateData.Status,
+        // Add other fields as needed
+    }
+
+    // Get the database connection from context
+    db := c.Locals("db").(*mongo.Database)
+
+    // Call the repository function to update the user
+    if err := repository.UpdateUser(c.Context(), db, userID, update); err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to update user",
+            "error":   err.Error(),
+        })
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "User updated successfully",
+    })
+}
+
+func DeleteUser(c *fiber.Ctx) error {
+    // Parse the user ID from the URL parameter
+    userID, err := primitive.ObjectIDFromHex(c.Params("id"))
+    if err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "message": "Invalid user ID",
+            "error":   err.Error(),
+        })
+    }
+
+    // Get the database connection from context
+    db := c.Locals("db").(*mongo.Database)
+
+    // Call the repository function to delete the user
+    if err := repository.DeleteUser(c.Context(), db, userID); err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to delete user",
+            "error":   err.Error(),
+        })
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "User deleted successfully",
+    })
+}
 
 // Login mengubah koneksi ke MongoDB menggunakan config.MongoClient
 func Login(c *fiber.Ctx) error {
@@ -215,5 +287,11 @@ func GetProfile(c *fiber.Ctx) error {
 
     return c.Status(fiber.StatusOK).JSON(fiber.Map{
         "user": user,
+    })
+}
+
+func LogOut(c *fiber.Ctx) error {
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "Logout successful",
     })
 }
