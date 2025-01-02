@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"learnonbe/config" // Import package config
+	"learnonbe/config"
 	"learnonbe/model"
 	"learnonbe/repository"
 	"time"

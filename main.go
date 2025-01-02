@@ -8,12 +8,18 @@ import (
     "github.com/gofiber/fiber/v2"
     "github.com/gofiber/fiber/v2/middleware/cors"
     "github.com/gofiber/fiber/v2/middleware/logger"
-    // "github.com/joho/godotenv"
+    "github.com/joho/godotenv"
 )
 
 func main() {
     // Inisialisasi koneksi ke database
     config.Init()
+
+	// Load environment variables
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
     // Create a new Fiber app
     app := fiber.New()
