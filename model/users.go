@@ -11,13 +11,19 @@ type Users struct {
 	Email       string             	`bson:"email" json:"email"`                   // Email pengguna
 	PhoneNumber string             	`bson:"phone_number,omitempty" json:"phone_number"` // Nomor telepon pengguna
 	Password    string             	`bson:"password" json:"password"`             // Kata sandi (hashed)
-	RoleID      primitive.ObjectID 	`bson:"role_id" json:"role_id"`               // ID role (referensi ke Roles)
+	RoleID      int                 `bson:"role_id" json:"role_id"`               // ID role (1 untuk admin, 2 untuk customer)
 	Status      string             	`bson:"status" json:"status"`                 // Status
 	CreatedAt	primitive.DateTime	`bson:"created_at,omitempty" json:"created_at"`
 }
 
 // Struktur untuk role (Roles)
 type Roles struct {
-	RoleID   primitive.ObjectID `bson:"_id,omitempty" json:"role_id"`  // ID unik role
-	RoleName string             `bson:"role_name" json:"role_name"`   // Nama role
+	RoleID   int    `bson:"role_id" json:"role_id"`  // ID unik role (1 untuk admin, 2 untuk customer)
+	RoleName string `bson:"role_name" json:"role_name"`   // Nama role
 }
+
+// Definisikan role yang valid
+const (
+	RoleAdmin   = 1
+	RoleCustomer = 2
+)

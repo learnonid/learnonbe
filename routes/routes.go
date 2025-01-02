@@ -13,6 +13,10 @@ func SetupRoutes(app *fiber.App) {
 		return c.SendString("Welcome to LearnOn.id")
 	})
 
+	// Roles routes
+	RolesRoutes := app.Group("/roles")
+	RolesRoutes.Post("/create", controller.CreateRole)
+
 	// Auth routes
 	AuthRoutes := app.Group("/auth")
 	AuthRoutes.Post("/register", controller.RegisterAkun)

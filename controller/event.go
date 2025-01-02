@@ -3,14 +3,13 @@ package controller
 import (
 	"learnonbe/model"
 	"learnonbe/repository"
-
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
-	// "gorm.io/gorm"
 )
 
+// CreateEvent handles creating an event in the database
 func CreateEvent(c *fiber.Ctx) error {
     var event model.Events
 
@@ -38,7 +37,7 @@ func CreateEvent(c *fiber.Ctx) error {
     // Get the database connection from context
     db := c.Locals("db").(*mongo.Database)
 
-    // Call the repository function to create the event
+    // Call the repository function to create the event in MongoDB
     if err := repository.CreateEvent(db, &event); err != nil {
         return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
             "message": "Failed to create event",
@@ -52,6 +51,7 @@ func CreateEvent(c *fiber.Ctx) error {
     })
 }
 
+// UploadEventImageHandler handles event image upload
 func UploadEventImageHandler(c *fiber.Ctx) error {
     fmt.Printf("Headers: %v\n", c.GetReqHeaders()) // Debug header request
     file, err := c.FormFile("event_image")
@@ -79,7 +79,7 @@ func UploadEventImageHandler(c *fiber.Ctx) error {
     })
 }
 
-// Get all events from the database using repository function
+// GetEvents retrieves all events from the database
 func GetEvents(c *fiber.Ctx) error {
     // Get the database connection from context
     db := c.Locals("db").(*mongo.Database)

@@ -33,10 +33,6 @@ func CreateUser(ctx context.Context, db *mongo.Database, user *model.Users) erro
     }
     user.Password = string(hashedPassword)
 
-    // Set default role ID if not provided
-    if user.RoleID.IsZero() {
-        user.RoleID = primitive.NewObjectID()
-    }
 
     // Set user ID and created at timestamp
     user.UserID = primitive.NewObjectID()

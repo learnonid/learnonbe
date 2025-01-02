@@ -1,7 +1,7 @@
 package controller
 
-// LSla7VHMOwgm5STP pw supa
 import (
+	"learnonbe/config" // Import package config
 	"learnonbe/model"
 	"learnonbe/repository"
 	"time"
@@ -10,15 +10,16 @@ import (
 	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	// "go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
+// RegisterAkun mengubah koneksi ke MongoDB menggunakan config.MongoClient
 func RegisterAkun(c *fiber.Ctx) error {
     var user model.Users
 
-    // Dapatkan koneksi database dari context
-    db := c.Locals("db").(*mongo.Database)
+    // Ambil koneksi database dari config
+    db := config.MongoClient.Database("learnon")
 
     // Parse body request ke struct User
     if err := c.BodyParser(&user); err != nil {
@@ -53,9 +54,9 @@ func RegisterAkun(c *fiber.Ctx) error {
     }
     user.Password = string(hashedPassword)
 
-    // Set role ID default (contoh: ObjectID baru untuk user biasa)
-    if user.RoleID.IsZero() {
-        user.RoleID = primitive.NewObjectID()
+    // Set role ID default ke 2 (customer) jika tidak ada input RoleID
+    if user.RoleID == 0 {  // Jika RoleID kosong, berarti pengguna tidak memberikan role
+        user.RoleID = 2  // Set default ke customer
     }
 
     // Simpan user ke database
@@ -74,14 +75,16 @@ func RegisterAkun(c *fiber.Ctx) error {
     })
 }
 
+
+// Login mengubah koneksi ke MongoDB menggunakan config.MongoClient
 func Login(c *fiber.Ctx) error {
     var loginRequest struct {
         Email    string `json:"email"`
         Password string `json:"password"`
     }
 
-    // Dapatkan koneksi database dari context
-    db := c.Locals("db").(*mongo.Database)
+    // Ambil koneksi database dari config
+    db := config.MongoClient.Database("your_database_name")
 
     // Parse body request ke struct
     if err := c.BodyParser(&loginRequest); err != nil {
@@ -129,14 +132,15 @@ func Login(c *fiber.Ctx) error {
     })
 }
 
+// LoginAdmin mengubah koneksi ke MongoDB menggunakan config.MongoClient
 func LoginAdmin(c *fiber.Ctx) error {
     var loginRequest struct {
         Email    string `json:"email"`
         Password string `json:"password"`
     }
 
-    // Dapatkan koneksi database dari context
-    db := c.Locals("db").(*mongo.Database)
+    // Ambil koneksi database dari config
+    db := config.MongoClient.Database("your_database_name")
 
     // Parse body request ke struct
     if err := c.BodyParser(&loginRequest); err != nil {
@@ -185,6 +189,7 @@ func LoginAdmin(c *fiber.Ctx) error {
     })
 }
 
+// GetProfile mengubah koneksi ke MongoDB menggunakan config.MongoClient
 func GetProfile(c *fiber.Ctx) error {
     claims, ok := c.Locals("claims").(*model.JWTClaims)
     if !ok {
@@ -197,7 +202,7 @@ func GetProfile(c *fiber.Ctx) error {
     userID := claims.UserID
 
     // Koneksi ke database
-    db := c.Locals("db").(*mongo.Database)
+    db := config.MongoClient.Database("your_database_name")
 
     // Gunakan repository untuk mencari user berdasarkan UserID
     user, err := repository.GetUserByID(c.Context(), db, userID)
