@@ -1,52 +1,60 @@
 package config
 
 import (
+	"context"
 	"os"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var db *mongo.Database
 
 func LoadEnv() {
 	err := godotenv.Load()
 	if err != nil {
-		panic("Error loading environtment")
+		panic("Error loading environment")
 	}
 }
 
-func GetDB() *gorm.DB {
-
-	// Load environtment
+func InitDB() {
+	// Load environment
 	LoadEnv()
 
-	// Load string connection
-	dbConf := os.Getenv("SQLSTRING")
-
-	// Create connection to database
-	DB, err := gorm.Open(mysql.Open(dbConf), &gorm.Config{
-		NamingStrategy: schema.NamingStrategy{
-			SingularTable: true,
-		},
-	})
-	if err != nil {
-		panic("Failed to connect to database! " + err.Error())
+	// Load MongoDB connection string
+	dbConf := os.Getenv("MONGOSTRING")
+	if dbConf == "" {
+		panic("MONGOSTRING is not set in environment variables")
 	}
 
-	// Set connection to database
-	db0, err := DB.DB()
+	// Create MongoDB client
+	clientOptions := options.Client().ApplyURI(dbConf)
+	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
-		panic("Failed to connect to database! " + err.Error())
+		panic("Failed to create MongoDB client: " + err.Error())
 	}
-	db0.SetConnMaxIdleTime(time.Duration(1) * time.Minute)
-	db0.SetConnMaxLifetime(time.Duration(1) * time.Minute)
-	db0.SetMaxIdleConns(2)
 
-	// Show log
-	DB.Statement.RaiseErrorOnNotFound = true // Raise error on not found
+	// Connect to MongoDB
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	return DB
+	err = client.Connect(ctx)
+	if err != nil {
+		panic("Failed to connect to MongoDB: " + err.Error())
+	}
+
+	// Ping MongoDB to ensure connection
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		panic("Failed to ping MongoDB: " + err.Error())
+	}
+
+	// Set the database instance
+	db = client.Database("nama_database") // Ganti dengan nama database yang sesuai
+}
+
+func GetDB() *mongo.Database {
+	return db
 }

@@ -1,174 +1,191 @@
 package controller
+
 // LSla7VHMOwgm5STP pw supa
 import (
 	"learnonbe/model"
-	repo "learnonbe/repository"
-	
-	// "strings"
-	"fmt"
+	"learnonbe/repository"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 func RegisterAkun(c *fiber.Ctx) error {
-	var user model.Users
+    var user model.Users
 
-	// Dapatkan koneksi database dari context
-	db := c.Locals("db").(*gorm.DB)
+    // Dapatkan koneksi database dari context
+    db := c.Locals("db").(*mongo.Database)
 
-	// Parse body request ke struct User
-	if err := c.BodyParser(&user); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid request body",
-			"error":   err.Error(),
-		})
-	}
+    // Parse body request ke struct User
+    if err := c.BodyParser(&user); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "message": "Invalid request body",
+            "error":   err.Error(),
+        })
+    }
 
-	// Validasi apakah email sudah terdaftar
-	existingUser := new(model.Users)
-	if err := db.Where("email = ?", user.Email).First(existingUser).Error; err == nil {
-		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-			"message": "Email already exists",
-		})
-	}
+    // Validasi apakah email sudah terdaftar
+    collection := db.Collection("users")
+    count, err := collection.CountDocuments(c.Context(), bson.M{"email": user.Email})
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to check email existence",
+            "error":   err.Error(),
+        })
+    }
+    if count > 0 {
+        return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+            "message": "Email already exists",
+        })
+    }
 
-	// Hash password sebelum disimpan
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to hash password",
-			"error":   err.Error(),
-		})
-	}
-	user.Password = string(hashedPassword)
+    // Hash password sebelum disimpan
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to hash password",
+            "error":   err.Error(),
+        })
+    }
+    user.Password = string(hashedPassword)
 
-	// Set role ID default (contoh: 2 untuk user biasa)
-	if user.RoleID == 0 {
-		user.RoleID = 2
-	}
+    // Set role ID default (contoh: ObjectID baru untuk user biasa)
+    if user.RoleID.IsZero() {
+        user.RoleID = primitive.NewObjectID()
+    }
 
-	// Simpan user ke database
-	if err := repo.CreateUser(db, &user); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to create user",
-			"error":   err.Error(),
-		})
-	}
+    // Simpan user ke database
+    user.UserID = primitive.NewObjectID()
+    _, err = collection.InsertOne(c.Context(), user)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to create user",
+            "error":   err.Error(),
+        })
+    }
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "User registered successfully",
-		"user":    user,
-	})
+    return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+        "message": "User registered successfully",
+        "user":    user,
+    })
 }
 
 func Login(c *fiber.Ctx) error {
-	var loginRequest struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+    var loginRequest struct {
+        Email    string `json:"email"`
+        Password string `json:"password"`
+    }
 
-	// Dapatkan koneksi database dari context
-	db := c.Locals("db").(*gorm.DB)
+    // Dapatkan koneksi database dari context
+    db := c.Locals("db").(*mongo.Database)
 
-	// Parse body request ke struct
-	if err := c.BodyParser(&loginRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid request body",
-			"error":   err.Error(),
-		})
-	}
+    // Parse body request ke struct
+    if err := c.BodyParser(&loginRequest); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "message": "Invalid request body",
+            "error":   err.Error(),
+        })
+    }
 
-	// Cari user berdasarkan email
-	var user model.Users
-	if err := db.Where("email = ?", loginRequest.Email).First(&user).Error; err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Invalid email or password",
-		})
-	}
+    // Cari user berdasarkan email
+    collection := db.Collection("users")
+    var user model.Users
+    err := collection.FindOne(c.Context(), bson.M{"email": loginRequest.Email}).Decode(&user)
+    if err != nil {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+            "message": "Invalid email or password",
+        })
+    }
 
-	// Bandingkan password yang diinput dengan yang tersimpan
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password)); err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Invalid email or password",
-		})
-	}
+    // Verifikasi password
+    err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password))
+    if err != nil {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+            "message": "Invalid email or password",
+        })
+    }
 
-	// Generate JWT token
-	token, err := repo.GenerateToken(user.UserID, user.RoleID)
-	if err != nil {
-		fmt.Println("Error generating token:", err) // Log error
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to generate token",
-			"error":   err.Error(),
-		})
-	}	
+    // Buat token JWT (contoh sederhana)
+    token := jwt.New(jwt.SigningMethodHS256)
+    claims := token.Claims.(jwt.MapClaims)
+    claims["user_id"] = user.UserID
+    claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Login successful",
-		"token":   token,
-	})
+    t, err := token.SignedString([]byte("secret"))
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to generate token",
+            "error":   err.Error(),
+        })
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "Login successful",
+        "token":   t,
+    })
 }
 
 func LoginAdmin(c *fiber.Ctx) error {
-	var loginRequest struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+    var loginRequest struct {
+        Email    string `json:"email"`
+        Password string `json:"password"`
+    }
 
-	// Dapatkan koneksi database dari context
-	db := c.Locals("db").(*gorm.DB)
+    // Dapatkan koneksi database dari context
+    db := c.Locals("db").(*mongo.Database)
 
-	// Parse body request ke struct
-	if err := c.BodyParser(&loginRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid request body",
-			"error":   err.Error(),
-		})
-	}
+    // Parse body request ke struct
+    if err := c.BodyParser(&loginRequest); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "message": "Invalid request body",
+            "error":   err.Error(),
+        })
+    }
 
-	// Cari user berdasarkan email
-	var user model.Users
-	if err := db.Where("email = ?", loginRequest.Email).First(&user).Error; err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Invalid email or password",
-		})
-	}
+    // Cari user berdasarkan email
+    collection := db.Collection("users")
+    var user model.Users
+    err := collection.FindOne(c.Context(), bson.M{"email": loginRequest.Email, "role": "admin"}).Decode(&user)
+    if err != nil {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+            "message": "Invalid email or password",
+        })
+    }
 
-	// Periksa apakah user memiliki RoleID untuk admin
-	if user.RoleID != 1 { // Misalnya RoleID=1 adalah admin
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"message": "Access denied. Admin privileges required.",
-		})
-	}
+    // Verifikasi password
+    err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password))
+    if err != nil {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+            "message": "Invalid email or password",
+        })
+    }
 
-	// Bandingkan password yang diinput dengan yang tersimpan
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password)); err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Invalid email or password",
-		})
-	}
+    // Buat token JWT (contoh sederhana)
+    token := jwt.New(jwt.SigningMethodHS256)
+    claims := token.Claims.(jwt.MapClaims)
+    claims["user_id"] = user.UserID
+    claims["role"] = "admin"
+    claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
-	// Generate JWT token
-	token, err := repo.GenerateToken(user.UserID, user.RoleID)
-	if err != nil {
-		fmt.Println("Error generating token:", err) // Log error
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to generate token",
-			"error":   err.Error(),
-		})
-	}
+    t, err := token.SignedString([]byte("secret"))
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to generate token",
+            "error":   err.Error(),
+        })
+    }
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Admin login successful",
-		"token":   token,
-	})
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "Login successful",
+        "token":   t,
+    })
 }
 
-
 func GetProfile(c *fiber.Ctx) error {
-    // Ambil klaim dari context
     claims, ok := c.Locals("claims").(*model.JWTClaims)
     if !ok {
         return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -176,37 +193,22 @@ func GetProfile(c *fiber.Ctx) error {
         })
     }
 
-    // Debug klaim
-    fmt.Printf("Claims in GetProfile: UserID=%d, RoleID=%d\n", claims.UserID, claims.RoleID)
-
     // Ambil UserID dari klaim
     userID := claims.UserID
 
     // Koneksi ke database
-    db := c.Locals("db").(*gorm.DB)
+    db := c.Locals("db").(*mongo.Database)
 
-    // Cari user berdasarkan UserID
-    user, err := repo.GetUserByID(db, userID)
+    // Gunakan repository untuk mencari user berdasarkan UserID
+    user, err := repository.GetUserByID(c.Context(), db, userID)
     if err != nil {
-        if err == gorm.ErrRecordNotFound {
-            return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-                "message": "User not found",
-            })
-        }
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-            "message": "Failed to retrieve user profile",
+        return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+            "message": "User not found",
             "error":   err.Error(),
         })
     }
 
-    // Hapus informasi sensitif seperti password sebelum mengirim respons
-    user.Password = ""
-
-	fmt.Printf("Claims in GetProfile: UserID=%d, RoleID=%d\n", claims.UserID, claims.RoleID)
-
-    // Kembalikan profil pengguna
     return c.Status(fiber.StatusOK).JSON(fiber.Map{
-        "message": "User profile retrieved successfully",
-        "user":    user,
+        "user": user,
     })
 }

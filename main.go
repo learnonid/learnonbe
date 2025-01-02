@@ -10,6 +10,9 @@ import (
 )
 
 func main() {
+	// Inisialisasi koneksi ke database
+	config.InitDB()
+
 	// Create a new Fiber app
 	app := fiber.New()
 

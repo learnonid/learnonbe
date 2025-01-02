@@ -7,49 +7,49 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
+	// "gorm.io/gorm"
 )
 
 func CreateEvent(c *fiber.Ctx) error {
-	var event model.Events
+    var event model.Events
 
-	// Parse JSON body into the Event struct
-	if err := c.BodyParser(&event); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid request body",
-			"error":   err.Error(),
-		})
-	}
+    // Parse body request to struct Event
+    if err := c.BodyParser(&event); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "message": "Invalid request body",
+            "error":   err.Error(),
+        })
+    }
 
-	// Handle file upload
-	file, err := c.FormFile("event_image")
-	if err == nil { // File upload is optional
-		fileURL, err := repository.UploadEventImage(file, "./uploads/events")
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"message": "Failed to upload event image",
-				"error":   err.Error(),
-			})
-		}
-		event.EventImage = fileURL
-	}
+    // Handle file upload
+    file, err := c.FormFile("event_image")
+    if err == nil { // File upload is optional
+        fileURL, err := repository.UploadEventImage(file, "./uploads/events")
+        if err != nil {
+            return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                "message": "Failed to upload event image",
+                "error":   err.Error(),
+            })
+        }
+        event.EventImage = fileURL
+    }
 
-	// Get the database connection from context
-	db := c.Locals("db").(*gorm.DB)
+    // Get the database connection from context
+    db := c.Locals("db").(*mongo.Database)
 
-	// Call the repository function to create the event
-	if err := repository.CreateEvent(db, &event); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to create event",
-			"error":   err.Error(),
-		})
-	}
+    // Call the repository function to create the event
+    if err := repository.CreateEvent(db, &event); err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to create event",
+            "error":   err.Error(),
+        })
+    }
 
-	// Return success response
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "Event created successfully",
-		"event":   event,
-	})
+    return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+        "message": "Event created successfully",
+        "event":   event,
+    })
 }
 
 func UploadEventImageHandler(c *fiber.Ctx) error {
@@ -74,23 +74,27 @@ func UploadEventImageHandler(c *fiber.Ctx) error {
 
     fmt.Printf("File uploaded to: %s\n", fileURL)
     return c.Status(fiber.StatusOK).JSON(fiber.Map{
-        "message": "Image uploaded successfully",
+        "message":  "Image uploaded successfully",
         "file_url": fileURL,
     })
 }
 
 // Get all events from the database using repository function
 func GetEvents(c *fiber.Ctx) error {
-	db := c.Locals("db").(*gorm.DB)
-	events, err := repository.GetAllEvents(db)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to fetch events",
-			"error":   err.Error(),
-		})
-	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Events retrieved successfully",
-		"events":  events,
-	})
+    // Get the database connection from context
+    db := c.Locals("db").(*mongo.Database)
+
+    // Call the repository function to get all events
+    events, err := repository.GetAllEvents(c.Context(), db)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to fetch events",
+            "error":   err.Error(),
+        })
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "Events retrieved successfully",
+        "events":  events,
+    })
 }

@@ -1,19 +1,23 @@
 package model
 
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
 // Struktur untuk pengguna (Users)
 type Users struct {
-	UserID      uint   `gorm:"primaryKey;autoIncrement" json:"user_id"`
-	FullName    string `gorm:"not null" json:"full_name"`
-	Email       string `gorm:"unique;not null" json:"email"`
-	PhoneNumber string `gorm:"size:15" json:"phone_number"`
-	Password    string `gorm:"not null" json:"password"`
-	RoleID      uint   `gorm:"not null" json:"role_id"`
-	Status      string `gorm:"default:'biasa'" json:"status"`
-	Roles       Roles  `gorm:"foreignKey:RoleID" json:"role"`
+	UserID      primitive.ObjectID 	`bson:"_id,omitempty" json:"user_id"`          // ID unik pengguna
+	FullName    string             	`bson:"full_name" json:"full_name"`           // Nama lengkap pengguna
+	Email       string             	`bson:"email" json:"email"`                   // Email pengguna
+	PhoneNumber string             	`bson:"phone_number,omitempty" json:"phone_number"` // Nomor telepon pengguna
+	Password    string             	`bson:"password" json:"password"`             // Kata sandi (hashed)
+	RoleID      primitive.ObjectID 	`bson:"role_id" json:"role_id"`               // ID role (referensi ke Roles)
+	Status      string             	`bson:"status" json:"status"`                 // Status
+	CreatedAt	primitive.DateTime	`bson:"created_at,omitempty" json:"created_at"`
 }
 
-// Struct untuk Role
+// Struktur untuk role (Roles)
 type Roles struct {
-	RoleID   uint   `gorm:"primaryKey" json:"role_id"`
-	RoleName string `gorm:"not null" json:"role_name"`
+	RoleID   primitive.ObjectID `bson:"_id,omitempty" json:"role_id"`  // ID unik role
+	RoleName string             `bson:"role_name" json:"role_name"`   // Nama role
 }
