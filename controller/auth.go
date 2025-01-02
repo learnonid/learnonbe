@@ -84,7 +84,7 @@ func Login(c *fiber.Ctx) error {
     }
 
     // Ambil koneksi database dari config
-    db := config.MongoClient.Database("your_database_name")
+    db := config.MongoClient.Database("learnon")
 
     // Parse body request ke struct
     if err := c.BodyParser(&loginRequest); err != nil {
@@ -140,7 +140,7 @@ func LoginAdmin(c *fiber.Ctx) error {
     }
 
     // Ambil koneksi database dari config
-    db := config.MongoClient.Database("your_database_name")
+    db := config.MongoClient.Database("learnon")
 
     // Parse body request ke struct
     if err := c.BodyParser(&loginRequest); err != nil {
@@ -202,7 +202,7 @@ func GetProfile(c *fiber.Ctx) error {
     userID := claims.UserID
 
     // Koneksi ke database
-    db := config.MongoClient.Database("your_database_name")
+    db := config.MongoClient.Database("learnon")
 
     // Gunakan repository untuk mencari user berdasarkan UserID
     user, err := repository.GetUserByID(c.Context(), db, userID)
