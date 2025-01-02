@@ -6,7 +6,6 @@ import (
 	"context"
 
 	"github.com/joho/godotenv"
-	// "github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -14,16 +13,19 @@ import (
 var MongoClient *mongo.Client
 
 func Init() {
-	// Load environment variables
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	// Hanya muat file .env jika aplikasi berjalan secara lokal
+	if os.Getenv("HEROKU") == "" {
+		// Muat file .env untuk lingkungan lokal
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
-	// Get MongoDB URI from .env
+	// Dapatkan MongoDB URI dari variabel lingkungan
 	mongoURI := os.Getenv("MONGO_URI")
 
-	// Connect to MongoDB
+	// Hubungkan ke MongoDB
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		log.Fatal(err)
