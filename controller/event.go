@@ -5,8 +5,11 @@ import (
 	"learnonbe/config"
 	"learnonbe/model"
 	"learnonbe/repository"
+
 	// "go.mongodb.org/mongo-driver/mongo"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CreateEvent handles creating an event in the database
@@ -96,5 +99,191 @@ func GetEvents(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Events retrieved successfully",
 		"events":  events,
+	})
+}
+
+// GetEventByID retrieves an event by ID from the database
+func GetEventByID(c *fiber.Ctx) error {
+	// Get the database connection from config
+	db := config.MongoClient.Database("learnon")
+
+	// Get the event ID from the URL parameter
+	eventID := c.Params("id")
+	// Convert string eventID to ObjectID
+	eventIDObj, err := primitive.ObjectIDFromHex(eventID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid event ID format",
+			"error":   err.Error(),
+		})
+	}
+
+	// Call the repository function to get the event by ID
+	event, err := repository.GetEventsByID(c.Context(), db, eventIDObj)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to fetch event",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Event retrieved successfully",
+		"event":   event,
+	})
+}
+
+// GetEventByType retrieves all events by type from the database
+func GetEventByType(c *fiber.Ctx) error {
+	// Get the database connection from config
+	db := config.MongoClient.Database("learnon")
+
+	// Get the event type from the query parameter
+	eventType := c.Query("type")
+
+	// Call the repository function to get all events by type
+	events, err := repository.GetEventsByType(c.Context(), db, eventType)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to fetch events",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Events retrieved successfully",
+		"events":  events,
+	})
+}
+
+// GetEventByTypeOnline retrieves all online events from the database
+func GetEventByTypeOnline(c *fiber.Ctx) error {
+	// Get the database connection from config
+	db := config.MongoClient.Database("learnon")
+
+	// Call the repository function to get all online events
+	events, err := repository.GetEventsByTypeOnline(c.Context(), db)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to fetch online events",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Online events retrieved successfully",
+		"events":  events,
+	})
+}
+
+// GetEventByTypeOffline retrieves all offline events from the database
+func GetEventByTypeOffline(c *fiber.Ctx) error {
+	// Get the database connection from config
+	db := config.MongoClient.Database("learnon")
+
+	// Call the repository function to get all offline events
+	events, err := repository.GetEventsByTypeOffline(c.Context(), db)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to fetch offline events",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Offline events retrieved successfully",
+		"events":  events,
+	})
+}
+
+// EditEvent handles updating an event in the database
+func EditEvent(c *fiber.Ctx) error {
+	var event model.Events
+
+	// Get the database connection from config
+	db := config.MongoClient.Database("learnon")
+
+	// Parse body request to struct Event
+	if err := c.BodyParser(&event); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+			"error":   err.Error(),
+		})
+	}
+
+	// Get the event ID from the URL parameter
+	eventID := c.Params("id")
+	// Convert string eventID to ObjectID
+	eventIDObj, err := primitive.ObjectIDFromHex(eventID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid event ID format",
+			"error":   err.Error(),
+		})
+	}
+
+	// Prepare the update data (event details to be updated)
+	updateData := bson.M{
+		"name":        event.EventName,
+		"event_type":  event.EventType,
+		"event_date":  event.EventDate,
+		"event_image": event.EventImage,
+		"location":    event.Location,
+	}
+
+	// Handle file upload
+	file, err := c.FormFile("event_image")
+	if err == nil { // File upload is optional
+		fileURL, err := repository.UploadEventImage(file, "./uploads/events")
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "Failed to upload event image",
+				"error":   err.Error(),
+			})
+		}
+		updateData["event_image"] = fileURL
+	}
+
+	// Call the repository function to update the event in MongoDB
+	if err := repository.UpdateEvents(c.Context(), db, eventIDObj, updateData); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to update event",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Event updated successfully",
+		"event":   event,
+	})
+}
+
+
+// DeleteEvent handles deleting an event from the database
+func DeleteEvent(c *fiber.Ctx) error {
+	// Get the database connection from config
+	db := config.MongoClient.Database("learnon")
+
+	// Get the event ID from the URL parameter
+	eventID := c.Params("id")
+	// Convert string eventID to ObjectID
+	eventIDObj, err := primitive.ObjectIDFromHex(eventID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid event ID format",
+			"error":   err.Error(),
+		})
+	}
+
+	// Call the repository function to delete the event from MongoDB
+	if err := repository.DeleteEvents(c.Context(), db, eventIDObj); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete event",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Event deleted successfully",
 	})
 }

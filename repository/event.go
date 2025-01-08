@@ -199,6 +199,16 @@ func GetEventsByType(ctx context.Context, db *mongo.Database, eventType string) 
 	return events, nil
 }
 
+// GetEventsByType Online mengambil acara kursus online
+func GetEventsByTypeOnline(ctx context.Context, db *mongo.Database) ([]model.Events, error) {
+	return GetEventsByType(ctx, db, "online")
+}
+
+// GetEventsByTypeOffline mengambil acara kursus offline
+func GetEventsByTypeOffline(ctx context.Context, db *mongo.Database) ([]model.Events, error) {
+	return GetEventsByType(ctx, db, "offline")
+}
+
 // GetEventsByPrice mengambil acara kursus berdasarkan harga
 func GetEventsByPrice(ctx context.Context, db *mongo.Database, price float64) ([]model.Events, error) {
 	var events []model.Events

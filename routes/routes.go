@@ -34,6 +34,12 @@ func SetupRoutes(app *fiber.App) {
 	EventRoutes.Post("/create", controller.CreateEvent)
 	EventRoutes.Post("/upload-image", controller.UploadEventImageHandler)
 	EventRoutes.Get("/all", controller.GetEvents)
+	EventRoutes.Get("/detail/:id", controller.GetEventByID)
+	EventRoutes.Get("/type/:id", controller.GetEventByType)
+	EventRoutes.Get("/type/online", controller.GetEventByTypeOnline)
+	EventRoutes.Get("/type/offline", controller.GetEventByTypeOffline)
+	EventRoutes.Put("/update/:id", controller.EditEvent)
+	EventRoutes.Delete("/delete/:id", controller.DeleteEvent)
 
 	// Admin routes
 	AdminRoutes := app.Group("/admin")
