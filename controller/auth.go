@@ -10,7 +10,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	// "go.mongodb.org/mongo-driver/mongo"
 
 	// "go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -102,7 +102,6 @@ func UpdateUser(c *fiber.Ctx) error {
         "email": updateData.Email,
 		"phone": updateData.PhoneNumber,
 		"password": updateData.Password,
-		"status": updateData.Status,
         // Add other fields as needed
     }
 

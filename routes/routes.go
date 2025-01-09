@@ -49,6 +49,14 @@ func SetupRoutes(app *fiber.App) {
 	EventRoutes.Put("/update/:id", controller.EditEvent)
 	EventRoutes.Delete("/delete/:id", controller.DeleteEvent)
 
+	// Book routes
+	BookRoutes := app.Group("/book")
+	BookRoutes.Post("/create", controller.CreateBook)
+	BookRoutes.Get("/all", controller.GetBooks)
+	BookRoutes.Get("/detail/:id", controller.GetBookByID)
+	BookRoutes.Put("/update/:id", controller.EditBook)
+	BookRoutes.Delete("/delete/:id", controller.DeleteBook)
+
 	// Admin routes
 	AdminRoutes := app.Group("/admin")
 	AdminRoutes.Use(middleware.JWTMiddleware("secret"))

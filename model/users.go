@@ -12,7 +12,6 @@ type Users struct {
 	PhoneNumber string             	`bson:"phone_number,omitempty" json:"phone_number"` // Nomor telepon pengguna
 	Password    string             	`bson:"password" json:"password"`             // Kata sandi (hashed)
 	RoleID      int                 `bson:"role_id" json:"role_id"`               // ID role (1 untuk admin, 2 untuk customer)
-	Status      string             	`bson:"status" json:"status"`                 // Status
 	CreatedAt	primitive.DateTime	`bson:"created_at,omitempty" json:"created_at"`
 }
 
