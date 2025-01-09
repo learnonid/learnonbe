@@ -107,7 +107,7 @@ func UpdateUser(c *fiber.Ctx) error {
     }
 
     // Get the database connection from context
-    db := c.Locals("db").(*mongo.Database)
+    db := config.MongoClient.Database("learnon")
 
     // Call the repository function to update the user
     if err := repository.UpdateUser(c.Context(), db, userID, update); err != nil {
@@ -133,7 +133,7 @@ func DeleteUser(c *fiber.Ctx) error {
     }
 
     // Get the database connection from context
-    db := c.Locals("db").(*mongo.Database)
+    db := config.MongoClient.Database("learnon")
 
     // Call the repository function to delete the user
     if err := repository.DeleteUser(c.Context(), db, userID); err != nil {
