@@ -23,6 +23,14 @@ func SetupRoutes(app *fiber.App) {
 	AuthRoutes.Post("/login", controller.Login)
 	AuthRoutes.Post("/login/admin", controller.LoginAdmin)
 
+	// User routes
+	UserRoutes := app.Group("/user")
+	UserRoutes.Get("/all", controller.GetAllUsers)
+	UserRoutes.Get("/detail/:id", controller.GetUserByID)
+	UserRoutes.Get("/detail/email/:email", controller.GetUserByEmail)
+	UserRoutes.Put("/update/:id", controller.UpdateUser)
+	UserRoutes.Delete("/delete/:id", controller.DeleteUser)
+
 	// Middleware
 	ProtectedRoutes := app.Group("/u")
 	ProtectedRoutes.Use(middleware.JWTMiddleware("secret"))

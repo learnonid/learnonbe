@@ -295,3 +295,69 @@ func LogOut(c *fiber.Ctx) error {
         "message": "Logout successful",
     })
 }
+
+func GetAllUsers(c *fiber.Ctx) error {
+    // Get the database connection from context
+    db := c.Locals("db").(*mongo.Database)
+
+    // Call the repository function to get all users
+    users, err := repository.GetAllUsers(c.Context(), db)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to get users",
+            "error":   err.Error(),
+        })
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "users": users,
+    })
+}   
+
+func GetUserByID(c *fiber.Ctx) error {
+    // Parse the user ID from the URL parameter
+    userID, err := primitive.ObjectIDFromHex(c.Params("id"))
+    if err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "message": "Invalid user ID",
+            "error":   err.Error(),
+        })
+    }
+
+    // Get the database connection from context
+    db := c.Locals("db").(*mongo.Database)
+
+    // Call the repository function to get the user by ID
+    user, err := repository.GetUserByID(c.Context(), db, userID)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to get user",
+            "error":   err.Error(),
+        })
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "user": user,
+    })
+}
+
+func GetUserByEmail(c *fiber.Ctx) error {
+    // Parse the user email from the URL parameter
+    userEmail := c.Params("email")
+
+    // Get the database connection from context
+    db := c.Locals("db").(*mongo.Database)
+
+    // Call the repository function to get the user by email
+    user, err := repository.GetUserByEmail(c.Context(), db, userEmail)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "message": "Failed to get user",
+            "error":   err.Error(),
+        })
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "user": user,
+    })
+}
