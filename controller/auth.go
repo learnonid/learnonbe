@@ -298,7 +298,7 @@ func LogOut(c *fiber.Ctx) error {
 
 func GetAllUsers(c *fiber.Ctx) error {
     // Get the database connection from context
-    db := c.Locals("db").(*mongo.Database)
+    db := config.MongoClient.Database("learnon")
 
     // Call the repository function to get all users
     users, err := repository.GetAllUsers(c.Context(), db)
@@ -325,7 +325,7 @@ func GetUserByID(c *fiber.Ctx) error {
     }
 
     // Get the database connection from context
-    db := c.Locals("db").(*mongo.Database)
+    db := config.MongoClient.Database("learnon")
 
     // Call the repository function to get the user by ID
     user, err := repository.GetUserByID(c.Context(), db, userID)
@@ -346,7 +346,7 @@ func GetUserByEmail(c *fiber.Ctx) error {
     userEmail := c.Params("email")
 
     // Get the database connection from context
-    db := c.Locals("db").(*mongo.Database)
+    db := config.MongoClient.Database("learnon")
 
     // Call the repository function to get the user by email
     user, err := repository.GetUserByEmail(c.Context(), db, userEmail)
