@@ -181,3 +181,58 @@ func GetAllUERegistration(c *fiber.Ctx) error {
 	// Respons data registrasi
 	return c.JSON(registrations)
 }
+
+func GetUERegistrationByUserID(c *fiber.Ctx) error {
+	// Ambil koneksi MongoDB
+	client := config.GetMongoClient()
+	if client == nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to connect to the database",
+		})
+	}
+	defer client.Disconnect(c.Context())
+
+	// Pilih koleksi "ueregist"
+	collection := client.Database("learnon").Collection("ueregist")
+
+	// Ambil user ID dari parameter URL
+	userIDStr := c.Params("id")
+
+	// Konversi string userID menjadi ObjectId
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID format",
+		})
+	}
+
+	// Ambil data registrasi berdasarkan user ID
+	cursor, err := collection.Find(c.Context(), primitive.D{{Key: "user_id", Value: userID}})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch registration data",
+		})
+	}
+	defer cursor.Close(c.Context())
+
+	// Loop semua data registrasi
+	var registrations []model.UserEventRegistration
+	for cursor.Next(c.Context()) {
+		var registration model.UserEventRegistration
+		err := cursor.Decode(&registration)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to decode registration data",
+			})
+		}
+		registrations = append(registrations, registration)
+	}
+
+	// Respons data registrasi
+	if len(registrations) == 0 {
+		return c.JSON(fiber.Map{
+			"message": "No registrations found for this user",
+		})
+	}
+	return c.JSON(registrations)
+}

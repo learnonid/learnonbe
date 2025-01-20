@@ -70,4 +70,5 @@ func SetupRoutes(app *fiber.App) {
 	// Event registration routes
 	UERRoutes := app.Group("/uer")
 	UERRoutes.Get("/all", controller.GetAllUERegistration)
+	UERRoutes.Get("/user/:id", controller.GetUERegistrationByUserID)
 }
