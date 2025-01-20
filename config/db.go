@@ -13,25 +13,28 @@ import (
 var MongoClient *mongo.Client
 
 func Init() {
-	// Hanya muat file .env jika aplikasi berjalan secara lokal
-	if os.Getenv("HEROKU") == "" {
-		// Muat file .env untuk lingkungan lokal
+	// Only load .env file if running locally (not on Heroku)
+	if os.Getenv("DYNO") == "" {
+		// Load .env for local environment
 		err := godotenv.Load(".env")
 		if err != nil {
 			log.Fatal("Error loading .env file")
 		}
 	}
 
-	// Dapatkan MongoDB URI dari variabel lingkungan
+	// Get MongoDB URI from environment variables
 	mongoURI := os.Getenv("MONGO_URI")
+	if mongoURI == "" {
+		log.Fatal("MONGO_URI is not set")
+	}
 
-	// Hubungkan ke MongoDB
+	// Connect to MongoDB
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Set global MongoClient
+	// Set the global MongoClient
 	MongoClient = client
 }
 
