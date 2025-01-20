@@ -63,6 +63,11 @@ func SetupRoutes(app *fiber.App) {
 	AdminRoutes.Put("/update-user/:id", controller.UpdateUser)
 	AdminRoutes.Delete("/delete-user/:id", controller.DeleteUser)
 
-	// Static file
-	app.Static("/uploads", "./uploads")
+	// File upload routes
+	FileRoutes := app.Group("/file")
+	FileRoutes.Post("/upload", controller.PostUploadPayment)
+
+	// Event registration routes
+	UERRoutes := app.Group("/uer")
+	UERRoutes.Get("/all", controller.GetAllUERegistration)
 }

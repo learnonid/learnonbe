@@ -360,3 +360,36 @@ func GetUserByEmail(c *fiber.Ctx) error {
         "user": user,
     })
 }
+
+// // RegisterUserEvent handles user event registration
+// func RegisterUserEvent(c *fiber.Ctx) error {
+// 	// Parse the request body into UserEventRegistration model
+// 	var registration model.UserEventRegistration
+// 	if err := c.BodyParser(&registration); err != nil {
+// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+// 			"message": "Invalid input data",
+// 			"error":   err.Error(),
+// 		})
+// 	}
+
+// 	// Get the database connection from config
+// 	db := config.MongoClient.Database("learnon")
+
+// 	// Set the registration date
+// 	registration.RegistrationDate = primitive.NewDateTimeFromTime(time.Now())
+
+// 	// Call the repository function to insert the registration data
+// 	result, err := repository.RegisterEvent(c.Context(), db, registration)
+// 	if err != nil {
+// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+// 			"message": "Failed to register user for event",
+// 			"error":   err.Error(),
+// 		})
+// 	}
+
+// 	// Return the success response
+// 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+// 		"message":          "Registration successful",
+// 		"registration_id":  result.InsertedID,
+// 	})
+// }
