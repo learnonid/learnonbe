@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"learnonbe/model"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
+	"github.com/learnonid/learnonbe/model"
 
 	"fmt"
 )

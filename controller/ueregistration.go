@@ -4,11 +4,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"learnonbe/config"
-	"learnonbe/model"
-	"learnonbe/repository"
 	"strconv"
 	"time"
+
+	"github.com/learnonid/learnonbe/config"
+	"github.com/learnonid/learnonbe/model"
+	"github.com/learnonid/learnonbe/repository"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"

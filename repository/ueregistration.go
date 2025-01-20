@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"learnonbe/model"
 	"net/http"
 	"os"
 
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/learnonid/learnonbe/model"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // UploadToGithub uploads a file to GitHub repository
@@ -82,19 +83,19 @@ func GetAllUERegistration(ctx context.Context, db *mongo.Database) ([]model.User
 	return registrations, nil
 }
 
-// get user event registration by user id 
+// get user event registration by user id
 func GetUERegistrationByUserID(ctx context.Context, db *mongo.Database, userID string) ([]model.UserEventRegistration, error) {
-    collection := db.Collection("ueregist")
-    cursor, err := collection.Find(ctx, primitive.D{{Key: "user_id", Value: userID}})
-    if err != nil {
-        return nil, err
-    }
-    defer cursor.Close(ctx)
+	collection := db.Collection("ueregist")
+	cursor, err := collection.Find(ctx, primitive.D{{Key: "user_id", Value: userID}})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
 
-    var registrations []model.UserEventRegistration
-    if err = cursor.All(ctx, &registrations); err != nil {
-        return nil, err
-    }
+	var registrations []model.UserEventRegistration
+	if err = cursor.All(ctx, &registrations); err != nil {
+		return nil, err
+	}
 
-    return registrations, nil
+	return registrations, nil
 }

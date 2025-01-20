@@ -2,9 +2,10 @@ package controller
 
 import (
 	"fmt"
-	"learnonbe/config"
-	"learnonbe/model"
-	"learnonbe/repository"
+
+	"github.com/learnonid/learnonbe/config"
+	"github.com/learnonid/learnonbe/model"
+	"github.com/learnonid/learnonbe/repository"
 
 	// "go.mongodb.org/mongo-driver/mongo"
 	"github.com/gofiber/fiber/v2"
@@ -257,7 +258,6 @@ func EditEvent(c *fiber.Ctx) error {
 		"event":   event,
 	})
 }
-
 
 // DeleteEvent handles deleting an event from the database
 func DeleteEvent(c *fiber.Ctx) error {

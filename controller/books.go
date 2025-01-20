@@ -2,9 +2,9 @@ package controller
 
 import (
 	// "fmt"
-	"learnonbe/config"
-	"learnonbe/model"
-	"learnonbe/repository"
+	"github.com/learnonid/learnonbe/config"
+	"github.com/learnonid/learnonbe/model"
+	"github.com/learnonid/learnonbe/repository"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,7 +25,6 @@ func CreateBook(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-
 
 	// Call the repository function to create the book in MongoDB
 	if err := repository.CreateBook(db, &book); err != nil {
@@ -120,14 +119,14 @@ func EditBook(c *fiber.Ctx) error {
 
 	// Prepare the update data (book details to be updated)
 	updateData := bson.M{
-		"book_name":    book.BookName,
-		"author":       book.Author,
-		"publisher":    book.Publisher,
-		"year":         book.Year,
-		"isbn":         book.ISBN,
-		"price":        book.Price,
-		"store_link":   book.StoreLink,
-		"created_at":   book.CreatedAt,
+		"book_name":  book.BookName,
+		"author":     book.Author,
+		"publisher":  book.Publisher,
+		"year":       book.Year,
+		"isbn":       book.ISBN,
+		"price":      book.Price,
+		"store_link": book.StoreLink,
+		"created_at": book.CreatedAt,
 	}
 
 	// Call the repository function to update the book in MongoDB

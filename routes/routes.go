@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"learnonbe/controller"
-	"learnonbe/middleware"
+	"github.com/learnonid/learnonbe/controller"
+	"github.com/learnonid/learnonbe/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )

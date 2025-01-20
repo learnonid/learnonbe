@@ -3,8 +3,8 @@ package controller
 import (
 	"context"
 	// "fmt"
-	"learnonbe/model"
-	"learnonbe/repository"
+	"github.com/learnonid/learnonbe/model"
+	"github.com/learnonid/learnonbe/repository"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"

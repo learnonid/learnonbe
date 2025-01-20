@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"learnonbe/model" // Pastikan path impor sesuai dengan struktur proyek Anda
+	"github.com/learnonid/learnonbe/model" // Pastikan path impor sesuai dengan struktur proyek Anda
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

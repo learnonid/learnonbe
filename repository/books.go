@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"learnonbe/model" // Ensure import path matches your project structure
+	"github.com/learnonid/learnonbe/model" // Ensure import path matches your project structure
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -47,7 +47,6 @@ func CreateBook(db *mongo.Database, book *model.Books) error {
 
 	return nil
 }
-
 
 // GetBookByID retrieves a book from the database by its ID
 func GetBookByID(ctx context.Context, db *mongo.Database, bookID primitive.ObjectID) (*model.Books, error) {
