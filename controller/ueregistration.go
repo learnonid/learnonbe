@@ -239,6 +239,44 @@ func GetUERegistrationByUserID(c *fiber.Ctx) error {
 	return c.JSON(registrations)
 }
 
+func GetUERegistrationByID(c *fiber.Ctx) error {
+	// Ambil koneksi MongoDB
+	client := config.GetMongoClient()
+	if client == nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to connect to the database",
+		})
+	}
+	defer client.Disconnect(c.Context())
+
+	// Pilih koleksi "ueregist"
+	collection := client.Database("learnon").Collection("ueregist")
+
+	// Ambil ID dari parameter URL
+	objectIDStr := c.Params("id")
+
+	// Konversi string ID menjadi ObjectId
+	objectID, err := primitive.ObjectIDFromHex(objectIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid ID format",
+		})
+	}
+
+	// Ambil data registrasi berdasarkan ID
+	filter := bson.M{"_id": objectID}
+	var registration model.UserEventRegistration
+	err = collection.FindOne(c.Context(), filter).Decode(&registration)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch registration data",
+		})
+	}
+
+	// Respons data registrasi
+	return c.JSON(registration)
+}
+
 func UpdateEventRegistration(c *fiber.Ctx) error {
 	// Ambil _id dari parameter URL
 	objectIDStr := c.Params("id")

@@ -43,7 +43,7 @@ func SetupRoutes(app *fiber.App) {
 	EventRoutes.Post("/upload-image", controller.UploadEventImageHandler)
 	EventRoutes.Get("/all", controller.GetEvents)
 	EventRoutes.Get("/detail/:id", controller.GetEventByID)
-	EventRoutes.Get("/type/:id", controller.GetEventByType)
+	EventRoutes.Get("/type", controller.GetEventsByType)
 	EventRoutes.Get("/type/online", controller.GetEventByTypeOnline)
 	EventRoutes.Get("/type/offline", controller.GetEventByTypeOffline)
 	EventRoutes.Put("/update/:id", controller.EditEvent)
@@ -71,5 +71,6 @@ func SetupRoutes(app *fiber.App) {
 	UERRoutes := app.Group("/uer")
 	UERRoutes.Get("/all", controller.GetAllUERegistration)
 	UERRoutes.Get("/user/:id", controller.GetUERegistrationByUserID)
+	UERRoutes.Get("/:id", controller.GetUERegistrationByID)
 	UERRoutes.Put("/update/:id", controller.UpdateEventRegistration)
 }

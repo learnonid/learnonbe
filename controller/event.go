@@ -134,20 +134,31 @@ func GetEventByID(c *fiber.Ctx) error {
 	})
 }
 
-// GetEventByType retrieves all events by type from the database
-func GetEventByType(c *fiber.Ctx) error {
-	// Get the database connection from config
+// GetEventsByType retrieves events by their type (online or offline)
+func GetEventsByType(c *fiber.Ctx) error {
+	// Ambil event_type dari query parameter
+	eventType := c.Query("type")
+	if eventType == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "event_type is required",
+		})
+	}
+
+	// Akses database dari konfigurasi
 	db := config.MongoClient.Database("learnon")
 
-	// Get the event type from the query parameter
-	eventType := c.Query("type")
-
-	// Call the repository function to get all events by type
+	// Panggil fungsi repository
 	events, err := repository.GetEventsByType(c.Context(), db, eventType)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to fetch events",
 			"error":   err.Error(),
+		})
+	}
+
+	if len(events) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "No events found",
 		})
 	}
 
@@ -157,20 +168,32 @@ func GetEventByType(c *fiber.Ctx) error {
 	})
 }
 
-// GetEventByTypeOnline retrieves all online events from the database
 func GetEventByTypeOnline(c *fiber.Ctx) error {
+	// Tetapkan eventType sebagai "online"
+	eventType := "online"
+
 	// Get the database connection from config
 	db := config.MongoClient.Database("learnon")
 
-	// Call the repository function to get all online events
-	events, err := repository.GetEventsByTypeOnline(c.Context(), db)
+	// Panggil repository untuk mendapatkan events berdasarkan type
+	events, err := repository.GetEventsByType(c.Context(), db, eventType)
+
 	if err != nil {
+		// Jika terjadi error saat mengambil data
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to fetch online events",
 			"error":   err.Error(),
 		})
 	}
 
+	// Jika tidak ada event ditemukan
+	if len(events) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "No online events found",
+		})
+	}
+
+	// Jika berhasil, kirimkan response
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Online events retrieved successfully",
 		"events":  events,

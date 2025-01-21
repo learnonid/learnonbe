@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -172,15 +173,25 @@ func GetEventsByDate(ctx context.Context, db *mongo.Database, date time.Time) ([
 	return events, nil
 }
 
-// GetEventsByType mengambil acara kursus berdasarkan jenisnya
+// GetEventsByType fetches events based on the event_type
 func GetEventsByType(ctx context.Context, db *mongo.Database, eventType string) ([]model.Events, error) {
-	var events []model.Events
-	filter := bson.M{
-		"event_type": eventType,
+	if eventType == "" {
+		return nil, errors.New("event_type cannot be empty")
 	}
+
+	var events []model.Events
+
+	// Filter for matching event_type (case-insensitive)
+	filter := bson.M{
+		"event_type": bson.M{
+			"$regex":   fmt.Sprintf("^%s$", eventType),
+			"$options": "i",
+		},
+	}
+
 	cursor, err := db.Collection("events").Find(ctx, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch events by type: %v", err)
+		return nil, fmt.Errorf("failed to fetch events: %v", err)
 	}
 	defer cursor.Close(ctx)
 
@@ -199,12 +210,12 @@ func GetEventsByType(ctx context.Context, db *mongo.Database, eventType string) 
 	return events, nil
 }
 
-// GetEventsByType Online mengambil acara kursus online
+// GetEventsByTypeOnline mengambil acara kursus online (case-insensitive)
 func GetEventsByTypeOnline(ctx context.Context, db *mongo.Database) ([]model.Events, error) {
 	return GetEventsByType(ctx, db, "online")
 }
 
-// GetEventsByTypeOffline mengambil acara kursus offline
+// GetEventsByTypeOffline mengambil acara kursus offline (case-insensitive)
 func GetEventsByTypeOffline(ctx context.Context, db *mongo.Database) ([]model.Events, error) {
 	return GetEventsByType(ctx, db, "offline")
 }
