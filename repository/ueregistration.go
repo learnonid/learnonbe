@@ -99,3 +99,107 @@ func GetUERegistrationByUserID(ctx context.Context, db *mongo.Database, userID s
 
 	return registrations, nil
 }
+
+// UploadToGithub to upload sertificate file to github
+func UploadCertificate(fileName, content string) error {
+	// Get owner and repo from environment
+	var githubOwner = os.Getenv("GITHUB_OWNER")
+	var githubRepo = os.Getenv("GITHUB_REPO")
+	var githubToken = os.Getenv("GITHUB_TOKEN")
+
+	// Validate environment variables
+	if githubOwner == "" || githubRepo == "" || githubToken == "" {
+		return fmt.Errorf("GITHUB_OWNER, GITHUB_REPO, or GITHUB_TOKEN is not set in the environment")
+	}
+
+	// Create API URL
+	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", githubOwner, githubRepo, fileName)
+
+	// Create request payload
+	uploadRequest := model.GithubUploadRequest{
+		Message: "Upload sertificate " + fileName,
+		Content: content,
+	}
+
+	jsonData, err := json.Marshal(uploadRequest)
+	if err != nil {
+		return fmt.Errorf("failed to marshal upload request: %v", err)
+	}
+
+	// Create HTTP request
+	req, err := http.NewRequest("PUT", apiURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %v", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+githubToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check the status code
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("failed to upload file to Github: %s, response: %s", resp.Status, string(body))
+	}
+
+	return nil
+}
+
+// UpladToGithub to upload materi file to github
+func UploadMateri(fileName, content string) error {
+	// Get owner and repo from environment
+	var githubOwner = os.Getenv("GITHUB_OWNER")
+	var githubRepo = os.Getenv("GITHUB_REPO")
+	var githubToken = os.Getenv("GITHUB_TOKEN")
+
+	// Validate environment variables
+	if githubOwner == "" || githubRepo == "" || githubToken == "" {
+		return fmt.Errorf("GITHUB_OWNER, GITHUB_REPO, or GITHUB_TOKEN is not set in the environment")
+	}
+
+	// Create API URL
+	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", githubOwner, githubRepo, fileName)
+
+	// Create request payload
+	uploadRequest := model.GithubUploadRequest{
+		Message: "Upload materi " + fileName,
+		Content: content,
+	}
+
+	jsonData, err := json.Marshal(uploadRequest)
+	if err != nil {
+		return fmt.Errorf("failed to marshal upload request: %v", err)
+	}
+
+	// Create HTTP request
+	req, err := http.NewRequest("PUT", apiURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %v", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+githubToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check the status code
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("failed to upload file to Github: %s, response: %s", resp.Status, string(body))
+	}
+
+	return nil
+}
