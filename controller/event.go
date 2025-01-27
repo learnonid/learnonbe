@@ -222,22 +222,11 @@ func GetEventByTypeOffline(c *fiber.Ctx) error {
 
 // EditEvent handles updating an event in the database
 func EditEvent(c *fiber.Ctx) error {
-	var event model.Events
-
 	// Get the database connection from config
 	db := config.MongoClient.Database("learnon")
 
-	// Parse body request to struct Event
-	if err := c.BodyParser(&event); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid request body",
-			"error":   err.Error(),
-		})
-	}
-
 	// Get the event ID from the URL parameter
 	eventID := c.Params("id")
-	// Convert string eventID to ObjectID
 	eventIDObj, err := primitive.ObjectIDFromHex(eventID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -246,25 +235,39 @@ func EditEvent(c *fiber.Ctx) error {
 		})
 	}
 
-	// Prepare the update data (event details to be updated)
-	updateData := bson.M{
-		"name":        event.EventName,
-		"event_type":  event.EventType,
-		"event_date":  event.EventDate,
-		"event_image": event.EventImage,
-		"location":    event.Location,
-	}
+	// Parse form-data manually
+	eventName := c.FormValue("event_name")
+	eventType := c.FormValue("event_type")
+	eventDate := c.FormValue("event_date")
+	location := c.FormValue("location")
+	description := c.FormValue("description")
+	price := c.FormValue("price")
+	vipPrice := c.FormValue("vip_price")
 
 	// Handle file upload
+	var fileURL string
 	file, err := c.FormFile("event_image")
 	if err == nil { // File upload is optional
-		fileURL, err := repository.UploadEventImage(file, "./uploads/events")
+		fileURL, err = repository.UploadEventImage(file, "./uploads/events")
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"message": "Failed to upload event image",
 				"error":   err.Error(),
 			})
 		}
+	}
+
+	// Prepare the update data
+	updateData := bson.M{
+		"event_name": eventName,
+		"event_type": eventType,
+		"event_date": eventDate,
+		"location":   location,
+		"description": description,
+		"price":       price,
+		"vip_price":   vipPrice,
+	}
+	if fileURL != "" {
 		updateData["event_image"] = fileURL
 	}
 
@@ -278,7 +281,7 @@ func EditEvent(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Event updated successfully",
-		"event":   event,
+		"event":   updateData,
 	})
 }
 

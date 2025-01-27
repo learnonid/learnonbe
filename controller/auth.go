@@ -98,13 +98,24 @@ func UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
+	// Hash the password if it is provided
+	if updateData.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(updateData.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "Failed to hash password",
+				"error":   err.Error(),
+			})
+		}
+		updateData.Password = string(hashedPassword)
+	}
+
 	// Convert updateData to bson.M
 	update := bson.M{
-		"name":     updateData.FullName,
+		"full_name":     updateData.FullName,
 		"email":    updateData.Email,
 		"phone":    updateData.PhoneNumber,
 		"password": updateData.Password,
-		// Add other fields as needed
 	}
 
 	// Get the database connection from context
