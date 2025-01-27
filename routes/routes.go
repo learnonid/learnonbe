@@ -73,4 +73,12 @@ func SetupRoutes(app *fiber.App) {
 	UERRoutes.Get("/user/:id", controller.GetUERegistrationByUserID)
 	UERRoutes.Get("/:id", controller.GetUERegistrationByID)
 	UERRoutes.Put("/update/:id", controller.UpdateEventRegistration)
+
+	// Book Payment routes
+	BookPaymentRoutes := app.Group("/book")
+	BookPaymentRoutes.Post("/pay", controller.PostBookPayment)
+	BookPaymentRoutes.Get("/all/pay", controller.GetAllBookPayment)
+	BookPaymentRoutes.Get("/pay/user/:id", controller.GetBookPaymentByUserID)
+	BookPaymentRoutes.Get("/pay/:id", controller.GetBookPaymentByID)
+
 }
