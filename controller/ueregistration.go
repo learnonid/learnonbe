@@ -26,6 +26,7 @@ func getStringValue(value *string) string {
 func PostUploadPayment(c *fiber.Ctx) error {
 	// Ambil data dari form-data
 	userID := c.FormValue("user_id")
+	userName := c.FormValue("full_name")
 	eventID := c.FormValue("event_id")
 	eventName := c.FormValue("event_name") // Nama acara
 	status := c.FormValue("status")        // Status (regular, VIP, etc.)
@@ -99,6 +100,7 @@ func PostUploadPayment(c *fiber.Ctx) error {
 	// Simpan data ke MongoDB dalam koleksi "ueregist"
 	registrasi := model.UserEventRegistration{
 		UserID:           objectID, // userID yang sudah di-convert ke ObjectID
+		UserName:         userName,
 		EventID:          primitive.NewObjectID(),
 		EventName:        eventName,
 		Status:           status,
@@ -135,6 +137,7 @@ func PostUploadPayment(c *fiber.Ctx) error {
 		"url":     fmt.Sprintf("https://github.com/learnonid/uploads/blob/main/%s", paymentFileName),
 		"data": fiber.Map{
 			"user_id":         userID,
+			"full_name":       userName,
 			"event_id":        eventID,
 			"event_name":      eventName,
 			"status":          status,
