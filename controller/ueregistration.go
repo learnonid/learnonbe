@@ -284,8 +284,6 @@ func UpdateEventRegistration(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid ID format. Make sure the ID is a valid ObjectID.",
-			"id": objectIDStr,
-
 		})
 	}
 
@@ -302,87 +300,6 @@ func UpdateEventRegistration(c *fiber.Ctx) error {
 		})
 	}
 
-	// Filter berdasarkan _id
-	filter := bson.M{
-		"_id": objectID,
-	}
-
-	fmt.Println("Received ObjectID from URL:", objectIDStr)
-
-	// Ambil file sertifikat jika ada
-	sertifikatFile, err := c.FormFile("sertifikat_file")
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Sertifikat file is required",
-		})
-	}
-
-	// Baca konten file sertifikat
-	sertifikatFileContent, err := sertifikatFile.Open()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Unable to open sertifikat file",
-		})
-	}
-	defer sertifikatFileContent.Close()
-
-	// Konversi file sertifikat ke base64
-	sertifikatContent, err := ioutil.ReadAll(sertifikatFileContent)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to read sertifikat file content",
-		})
-	}
-	sertifikatBase64 := base64.StdEncoding.EncodeToString(sertifikatContent)
-
-	// Buat nama file untuk sertifikat
-	sertifikatFileName := fmt.Sprintf("sertifikat/%s_%s_%d_%s", userID, eventID, time.Now().Unix(), sertifikatFile.Filename)
-
-	// Upload file sertifikat ke GitHub
-	err = repository.UploadToGithub(sertifikatFileName, sertifikatBase64)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	// Ambil file materi jika ada
-	materiFile, err := c.FormFile("materi_file")
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Materi file is required",
-		})
-	}
-
-	// Baca konten file materi
-	materiFileContent, err := materiFile.Open()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Unable to open materi file",
-		})
-	}
-	defer materiFileContent.Close()
-
-	// Konversi file materi ke base64
-	materiContent, err := ioutil.ReadAll(materiFileContent)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to read materi file content",
-		})
-	}
-	materiBase64 := base64.StdEncoding.EncodeToString(materiContent)
-
-	// Buat nama file untuk materi
-	materiFileName := fmt.Sprintf("materi/%s_%s_%d_%s", userID, eventID, time.Now().Unix(), materiFile.Filename)
-
-	// Upload file materi ke GitHub
-	err = repository.UploadMateri(materiFileName, materiBase64)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
 	// Ambil koneksi MongoDB
 	client := config.GetMongoClient()
 	if client == nil {
@@ -395,14 +312,121 @@ func UpdateEventRegistration(c *fiber.Ctx) error {
 	// Pilih koleksi "ueregist"
 	collection := client.Database("learnon").Collection("ueregist")
 
+	// Filter berdasarkan _id
+	filter := bson.M{
+		"_id": objectID,
+	}
+
+	// Cari dokumen di database untuk memeriksa kondisi file
+	var existingData bson.M
+	if err := collection.FindOne(c.Context(), filter).Decode(&existingData); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch existing data",
+		})
+	}
+
+	// Siapkan variabel untuk file sertifikat dan materi
+	var sertifikatURL string
+	var materiURL string
+
+	// Cek apakah sertifikat_file adalah link atau form-data
+	if existingData["sertifikat_file"] == nil || existingData["sertifikat_file"] == "" {
+		// Ambil file sertifikat dari form-data
+		sertifikatFile, err := c.FormFile("sertifikat_file")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Sertifikat file is required",
+			})
+		}
+
+		// Baca konten file sertifikat
+		sertifikatFileContent, err := sertifikatFile.Open()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Unable to open sertifikat file",
+			})
+		}
+		defer sertifikatFileContent.Close()
+
+		// Konversi file sertifikat ke base64
+		sertifikatContent, err := ioutil.ReadAll(sertifikatFileContent)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to read sertifikat file content",
+			})
+		}
+		sertifikatBase64 := base64.StdEncoding.EncodeToString(sertifikatContent)
+
+		// Buat nama file untuk sertifikat
+		sertifikatFileName := fmt.Sprintf("sertifikat/%s_%s_%d_%s", userID, eventID, time.Now().Unix(), sertifikatFile.Filename)
+
+		// Upload file sertifikat ke GitHub
+		err = repository.UploadToGithub(sertifikatFileName, sertifikatBase64)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		sertifikatURL = fmt.Sprintf("https://github.com/learnonid/uploads/blob/main/%s", sertifikatFileName)
+	} else {
+		// Gunakan link yang ada di database
+		sertifikatURL = existingData["sertifikat_file"].(string)
+	}
+
+	// Cek apakah materi_file adalah link atau form-data
+	if existingData["materi_file"] == nil || existingData["materi_file"] == "" {
+		// Ambil file materi dari form-data
+		materiFile, err := c.FormFile("materi_file")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Materi file is required",
+			})
+		}
+
+		// Baca konten file materi
+		materiFileContent, err := materiFile.Open()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Unable to open materi file",
+			})
+		}
+		defer materiFileContent.Close()
+
+		// Konversi file materi ke base64
+		materiContent, err := ioutil.ReadAll(materiFileContent)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to read materi file content",
+			})
+		}
+		materiBase64 := base64.StdEncoding.EncodeToString(materiContent)
+
+		// Buat nama file untuk materi
+		materiFileName := fmt.Sprintf("materi/%s_%s_%d_%s", userID, eventID, time.Now().Unix(), materiFile.Filename)
+
+		// Upload file materi ke GitHub
+		err = repository.UploadMateri(materiFileName, materiBase64)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		materiURL = fmt.Sprintf("https://github.com/learnonid/uploads/blob/main/%s", materiFileName)
+	} else {
+		// Gunakan link yang ada di database
+		materiURL = existingData["materi_file"].(string)
+	}
+
 	// Update data di MongoDB
 	update := bson.M{
 		"$set": bson.M{
 			"event_name":      eventName,
 			"status":          status,
 			"price":           price,
-			"sertifikat_file": fmt.Sprintf("https://github.com/learnonid/uploads/blob/main/%s", sertifikatFileName),
-			"materi_file":      fmt.Sprintf("https://github.com/learnonid/uploads/blob/main/%s", materiFileName),
+			"sertifikat_file": sertifikatURL,
+			"materi_file":     materiURL,
 		},
 	}
 
@@ -422,8 +446,8 @@ func UpdateEventRegistration(c *fiber.Ctx) error {
 			"event_name":      eventName,
 			"status":          status,
 			"price":           price,
-			"sertifikat_file": fmt.Sprintf("https://github.com/learnonid/uploads/blob/main/%s", sertifikatFileName),
-			"materi_file":      fmt.Sprintf("https://github.com/learnonid/uploads/blob/main/%s", materiFileName),
+			"sertifikat_file": sertifikatURL,
+			"materi_file":     materiURL,
 		},
 	})
 }
