@@ -292,6 +292,7 @@ func UpdateEventRegistration(c *fiber.Ctx) error {
 
 	// Ambil data dari form-data
 	userID := c.FormValue("user_id")
+	fullName := c.FormValue("full_name")
 	eventID := c.FormValue("event_id")
 	eventName := c.FormValue("event_name")
 	status := c.FormValue("status")
@@ -445,6 +446,7 @@ func UpdateEventRegistration(c *fiber.Ctx) error {
 		"message": "Registration data updated successfully",
 		"data": fiber.Map{
 			"user_id":         userID,
+			"full_name":       fullName,
 			"event_id":        eventID,
 			"event_name":      eventName,
 			"status":          status,

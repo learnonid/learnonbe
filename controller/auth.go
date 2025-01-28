@@ -112,10 +112,11 @@ func UpdateUser(c *fiber.Ctx) error {
 
 	// Convert updateData to bson.M
 	update := bson.M{
-		"full_name":     updateData.FullName,
-		"email":    updateData.Email,
-		"phone":    updateData.PhoneNumber,
-		"password": updateData.Password,
+		"full_name":    updateData.FullName,
+		"email":        updateData.Email,
+		"phone_number": updateData.PhoneNumber,
+		"password":     updateData.Password,
+		"role_id":      updateData.RoleID,
 	}
 
 	// Get the database connection from context

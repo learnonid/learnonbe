@@ -2,6 +2,8 @@ package controller
 
 import (
 	"fmt"
+	"log"
+	"strconv"
 
 	"github.com/learnonid/learnonbe/config"
 	"github.com/learnonid/learnonbe/model"
@@ -236,13 +238,15 @@ func EditEvent(c *fiber.Ctx) error {
 	}
 
 	// Parse form-data manually
-	eventName := c.FormValue("event_name")
-	eventType := c.FormValue("event_type")
-	eventDate := c.FormValue("event_date")
-	location := c.FormValue("location")
+	eventName 	:= c.FormValue("event_name")
+	eventType 	:= c.FormValue("event_type")
+	eventDate 	:= c.FormValue("event_date")
+	location 	:= c.FormValue("location")
 	description := c.FormValue("description")
-	price := c.FormValue("price")
-	vipPrice := c.FormValue("vip_price")
+
+	// Parse price and vipPrice as float64
+	priceStr 	:= c.FormValue("price")
+	vipPriceStr := c.FormValue("vip_price")
 
 	// Handle file upload
 	var fileURL string
@@ -257,12 +261,30 @@ func EditEvent(c *fiber.Ctx) error {
 		}
 	}
 
+	price, err := strconv.ParseFloat(priceStr, 64)
+	if err != nil {
+		log.Println("Failed to parse price:", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid price format",
+			"error":   err.Error(),
+		})
+	}
+
+	vipPrice, err := strconv.ParseFloat(vipPriceStr, 64)
+	if err != nil {
+		log.Println("Failed to parse vip_price:", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid vip_price format",
+			"error":   err.Error(),
+		})
+	}
+
 	// Prepare the update data
 	updateData := bson.M{
-		"event_name": eventName,
-		"event_type": eventType,
-		"event_date": eventDate,
-		"location":   location,
+		"event_name":  eventName,
+		"event_type":  eventType,
+		"event_date":  eventDate,
+		"location":    location,
 		"description": description,
 		"price":       price,
 		"vip_price":   vipPrice,
